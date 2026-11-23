@@ -1,0 +1,2442 @@
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Uchrashuv — DreamDay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-outer: #EDE6DA;
+            --bg-card: #FBF8F3;
+            --bg-champagne: #F3ECE1;
+            --burgundy: #9B1328;
+            --burgundy-dark: #7A0E1F;
+            --burgundy-light: #F8E8EC;
+            --maroon-celebration: #4A0A14;
+            --maroon-glow: #6E1220;
+            --text-espresso: #231815;
+            --text-taupe: #7A6A63;
+            --white: #FFFFFF;
+            --border-soft: rgba(35, 24, 21, 0.08);
+            --shadow-card: 0 28px 66px rgba(35, 24, 21, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100dvh;
+            background: radial-gradient(circle at top, #F6F0E6 0%, var(--bg-outer) 100%);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-espresso);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            overflow-x: hidden;
+        }
+
+        svg {
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', Georgia, serif;
+        }
+
+        /* Asosiy Mobil Karta Konteyneri */
+        .app-shell {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            min-height: 675px;
+            max-height: 92dvh;
+            background-color: var(--bg-card);
+            border-radius: 34px;
+            box-shadow: var(--shadow-card), 0 0 0 1px rgba(155, 19, 40, 0.09);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.65s cubic-bezier(0.22, 1, 0.36, 1), color 0.5s ease;
+        }
+
+        .app-shell.celebration-mode {
+            background: radial-gradient(circle at 50% 26%, var(--maroon-glow) 0%, var(--maroon-celebration) 65%, #2D040A 100%);
+            color: #FFF9F5;
+        }
+
+        /* Canvas Particle Qatlami */
+        #fx-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        /* Suzuvchi mayda yurakchalar foni */
+        .bg-hearts {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bg-heart-dot {
+            position: absolute;
+            color: var(--burgundy);
+            opacity: 0.11;
+            font-size: 11px;
+            animation: floatSlow 6.5s ease-in-out infinite;
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-9px) scale(1.14); }
+        }
+
+        /* Yuqori o'ng burchakdagi kichik tugmalar */
+        .top-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 35;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-circle-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(35, 24, 21, 0.09);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: var(--text-espresso);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(35, 24, 21, 0.06);
+            transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .icon-circle-btn:hover {
+            background: var(--white);
+            color: var(--burgundy);
+        }
+
+        .icon-circle-btn:active {
+            transform: scale(0.9);
+        }
+
+        .app-shell.celebration-mode .icon-circle-btn {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.22);
+            color: #FFF9F5;
+        }
+
+        /* Bosqich sahifalari */
+        .step-screen {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 26px 24px 28px;
+            overflow-y: auto;
+            animation: stepReveal 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .step-screen.active {
+            display: flex;
+        }
+
+        @keyframes stepReveal {
+            from { opacity: 0; transform: translateY(14px) scale(0.985); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Yuqori Kichik Badge */
+        .pill-badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 26px;
+            margin-bottom: 18px;
+        }
+
+        .pill-line {
+            width: 24px;
+            height: 1px;
+            background: rgba(155, 19, 40, 0.22);
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: var(--white);
+            border: 1px solid rgba(155, 19, 40, 0.12);
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-taupe);
+            box-shadow: 0 2px 8px rgba(35, 24, 21, 0.04);
+        }
+
+        /* =====================================================
+           1-BOSQICH: Siniq Yurak va Magnit Slayder
+           ===================================================== */
+        .step1-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .subtitle-italic {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 18px;
+            color: var(--text-taupe);
+            margin-bottom: 4px;
+        }
+
+        .hero-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--burgundy);
+            line-height: 1.12;
+            letter-spacing: -0.01em;
+            margin-bottom: 24px;
+        }
+
+        .heart-stage {
+            position: relative;
+            width: 148px;
+            height: 122px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+        }
+
+        .heart-glow {
+            position: absolute;
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(155, 19, 40, 0.26) 0%, rgba(155, 19, 40, 0) 70%);
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .heart-sparkle {
+            position: absolute;
+            color: #FFF9F0;
+            font-size: 18px;
+            opacity: 0;
+            transform: scale(0.3);
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+        }
+
+        .step1-desc {
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--text-taupe);
+            max-width: 265px;
+            margin-bottom: 28px;
+        }
+
+        .slider-track {
+            position: relative;
+            width: 100%;
+            max-width: 314px;
+            height: 62px;
+            border-radius: 999px;
+            background: var(--bg-champagne);
+            border: 1px solid rgba(155, 19, 40, 0.15);
+            box-shadow: inset 0 2px 7px rgba(35, 24, 21, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        .slider-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #B51B34 0%, var(--burgundy) 100%);
+            pointer-events: none;
+        }
+
+        .slider-label {
+            position: relative;
+            z-index: 2;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            color: var(--text-taupe);
+            text-transform: uppercase;
+            padding-left: 26px;
+            pointer-events: none;
+        }
+
+        .slider-hint-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            animation: nudgeRight 1.5s ease-in-out infinite;
+        }
+
+        @keyframes nudgeRight {
+            0%, 100% { transform: translateX(0); opacity: 0.65; }
+            50% { transform: translateX(4px); opacity: 1; }
+        }
+
+        .slider-thumb {
+            position: absolute;
+            left: 6px;
+            top: 6px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--white);
+            color: var(--burgundy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(155, 19, 40, 0.28);
+            z-index: 4;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .slider-thumb:active {
+            cursor: grabbing;
+            box-shadow: 0 6px 20px rgba(155, 19, 40, 0.42);
+        }
+
+        .sender-caption {
+            margin-top: 18px;
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-taupe);
+        }
+
+        /* =====================================================
+           2-BOSQICH: Savol va Xavfsiz Zonada Qochuvchi Yo'q
+           ===================================================== */
+        .step2-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 34px;
+            margin-bottom: 12px;
+        }
+
+        .counter-pill {
+            padding: 5px 11px;
+            border-radius: 999px;
+            background: var(--white);
+            border: 1px solid var(--border-soft);
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--burgundy);
+            font-variant-numeric: tabular-nums;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .question-card {
+            position: relative;
+            flex: 1;
+            background: var(--white);
+            border-radius: 28px;
+            border: 1px solid rgba(35, 24, 21, 0.06);
+            box-shadow: 0 12px 34px rgba(35, 24, 21, 0.05);
+            padding: 24px 18px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .question-sub {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-taupe);
+            max-width: 255px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+
+        .question-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--text-espresso);
+            margin-bottom: 12px;
+        }
+
+        .choice-arena {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            min-height: 230px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-yes {
+            position: relative;
+            z-index: 10;
+            padding: 15px 34px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #B51B34 0%, var(--burgundy) 100%);
+            color: var(--white);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            box-shadow: 0 12px 26px rgba(155, 19, 40, 0.36);
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        }
+
+        .btn-yes:active {
+            transform: scale(0.95);
+        }
+
+        .btn-no {
+            position: absolute;
+            z-index: 5;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 11px 22px;
+            border-radius: 999px;
+            border: 1px solid rgba(35, 24, 21, 0.14);
+            background: var(--bg-card);
+            color: var(--text-taupe);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(35, 24, 21, 0.06);
+            transition: left 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        top 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* =====================================================
+           3-BOSQICH: To'q Bordo Bayram Ekrani (#4A0A14)
+           ===================================================== */
+        .bokeh-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bokeh-dot {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 224, 194, 0.62) 0%, rgba(255, 182, 193, 0) 72%);
+            animation: bokehFloat 4.8s ease-in-out infinite;
+        }
+
+        @keyframes bokehFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.45; }
+            50% { transform: translateY(-18px) scale(1.22); opacity: 0.92; }
+        }
+
+        .celebration-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            z-index: 4;
+        }
+
+        .heart-emblem-circle {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.13);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 0 40px rgba(255, 190, 200, 0.28);
+            animation: heartBeat 1.35s ease-in-out infinite;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            18% { transform: scale(1.14); }
+            34% { transform: scale(0.97); }
+            50% { transform: scale(1.09); }
+        }
+
+        .celebration-kicker {
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255, 232, 225, 0.74);
+            margin-bottom: 10px;
+        }
+
+        .celebration-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-weight: 600;
+            line-height: 1.15;
+            color: var(--white);
+            margin-bottom: 14px;
+        }
+
+        .celebration-title em {
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .celebration-desc {
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: rgba(255, 240, 236, 0.82);
+            max-width: 265px;
+            margin-bottom: 32px;
+        }
+
+        .btn-cream {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 15px 28px;
+            border-radius: 999px;
+            border: none;
+            background: var(--bg-card);
+            color: var(--maroon-celebration);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+            cursor: pointer;
+            transition: transform 0.16s ease;
+        }
+
+        .btn-cream:active {
+            transform: scale(0.96);
+        }
+
+        /* =====================================================
+           4 va 5-BOSQICH: Qadamlar Sarlavhasi
+           ===================================================== */
+        .wizard-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 28px;
+            margin-bottom: 14px;
+            padding-right: 78px;
+        }
+
+        .wizard-kicker {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-taupe);
+        }
+
+        .wizard-dots {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--burgundy);
+        }
+
+        .dot-bar {
+            width: 18px;
+            height: 4px;
+            border-radius: 99px;
+            background: rgba(155, 19, 40, 0.2);
+            transition: background-color 0.25s ease;
+        }
+
+        .dot-bar.active {
+            background: var(--burgundy);
+        }
+
+        .back-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--white);
+            border: 1px solid var(--border-soft);
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-taupe);
+            cursor: pointer;
+        }
+
+        .wizard-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 29px;
+            font-weight: 600;
+            line-height: 1.18;
+            color: var(--text-espresso);
+            margin-bottom: 14px;
+        }
+
+        .section-label {
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-taupe);
+            margin-bottom: 8px;
+            margin-top: 14px;
+        }
+
+        /* Sana Kartalari */
+        .date-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .date-card {
+            width: 100%;
+            padding: 13px 15px;
+            border-radius: 18px;
+            background: var(--white);
+            border: 1.5px solid rgba(35, 24, 21, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .date-card:active {
+            transform: scale(0.985);
+        }
+
+        .date-card.selected {
+            background: var(--burgundy);
+            border-color: var(--burgundy);
+            color: var(--white);
+            box-shadow: 0 10px 22px rgba(155, 19, 40, 0.25);
+        }
+
+        .date-card-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .date-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: var(--bg-champagne);
+            color: var(--burgundy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .date-card.selected .date-icon-box {
+            background: rgba(255, 255, 255, 0.18);
+            color: var(--white);
+        }
+
+        .date-card-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .date-card-time {
+            font-size: 11.5px;
+            color: var(--text-taupe);
+            margin-top: 2px;
+        }
+
+        .date-card.selected .date-card-time {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(35, 24, 21, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .date-card.selected .radio-circle {
+            background: var(--white);
+            border-color: var(--white);
+            color: var(--burgundy);
+        }
+
+        .divider-or {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            color: var(--text-taupe);
+            margin: 10px 0 8px;
+        }
+
+        .custom-date-box {
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 16px;
+            background: var(--white);
+            border: 1px solid var(--border-soft);
+            display: none;
+            grid-template-columns: 1.4fr 0.9fr;
+            gap: 8px;
+        }
+
+        .custom-date-box.open {
+            display: grid;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 12px;
+            border: 1px solid rgba(35, 24, 21, 0.12);
+            background: var(--bg-card);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-espresso);
+            outline: none;
+        }
+
+        .field-input:focus {
+            border-color: var(--burgundy);
+            background: var(--white);
+        }
+
+        /* Reja Chiplari */
+        .summary-pill {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 14px;
+            border-radius: 16px;
+            background: var(--white);
+            border: 1px solid var(--border-soft);
+            margin-bottom: 4px;
+        }
+
+        .chips-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 14px;
+            border-radius: 15px;
+            background: var(--white);
+            border: 1.5px solid rgba(35, 24, 21, 0.08);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-espresso);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chip-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chip-btn.selected {
+            background: var(--burgundy);
+            border-color: var(--burgundy);
+            color: var(--white);
+            box-shadow: 0 8px 18px rgba(155, 19, 40, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .note-textarea {
+            width: 100%;
+            min-height: 76px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(35, 24, 21, 0.1);
+            background: var(--white);
+            font-family: inherit;
+            font-size: 12.5px;
+            color: var(--text-espresso);
+            resize: none;
+            outline: none;
+        }
+
+        .note-textarea:focus {
+            border-color: var(--burgundy);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--text-taupe);
+            margin-top: 4px;
+        }
+
+        /* Asosiy Bordo Tugma */
+        .btn-primary {
+            width: 100%;
+            margin-top: auto;
+            padding: 15px 20px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #B51B34 0%, var(--burgundy) 100%);
+            color: var(--white);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            box-shadow: 0 10px 24px rgba(155, 19, 40, 0.28);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.14s ease;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* =====================================================
+           6-BOSQICH: Yakuniy Xat
+           ===================================================== */
+        .letter-card {
+            position: relative;
+            background: var(--white);
+            border-radius: 26px;
+            border: 1px solid rgba(155, 19, 40, 0.11);
+            padding: 24px 20px;
+            box-shadow: 0 16px 40px rgba(35, 24, 21, 0.08);
+            margin-bottom: 16px;
+            animation: cardUnfold 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes cardUnfold {
+            from { opacity: 0; transform: translateY(18px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .letter-corner-heart {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--burgundy-light);
+            color: var(--burgundy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .letter-greeting {
+            font-family: 'Playfair Display', serif;
+            font-size: 23px;
+            font-weight: 600;
+            color: var(--text-espresso);
+            margin-bottom: 8px;
+        }
+
+        .letter-body {
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--text-taupe);
+            margin-bottom: 14px;
+        }
+
+        .letter-details-box {
+            background: var(--bg-champagne);
+            border-radius: 18px;
+            padding: 14px 15px;
+            border: 1px solid rgba(155, 19, 40, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-espresso);
+        }
+
+        .letter-sign {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--burgundy);
+        }
+
+        .footer-credit {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-taupe);
+            margin-top: 10px;
+        }
+
+        /* =====================================================
+           SOZLAMALAR MODAL OYNASI VA SHAXSIY HAVOLA GENERATORI
+           ===================================================== */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgba(35, 24, 21, 0.56);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 405px;
+            max-height: 90dvh;
+            background: var(--bg-card);
+            border-radius: 28px;
+            border: 1px solid rgba(155, 19, 40, 0.16);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: stepReveal 0.25s ease;
+        }
+
+        .modal-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--white);
+        }
+
+        .modal-body {
+            padding: 14px 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-footer {
+            padding: 12px 18px 16px;
+            border-top: 1px solid var(--border-soft);
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal-footer-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .modal-label {
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-taupe);
+        }
+
+        .add-item-btn {
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(155, 19, 40, 0.25);
+            background: var(--burgundy-light);
+            color: var(--burgundy);
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .dynamic-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .dynamic-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-row-btn {
+            width: 30px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid rgba(155, 19, 40, 0.16);
+            background: var(--white);
+            color: var(--burgundy);
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .btn-secondary-modal {
+            flex: 1;
+            padding: 11px;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: var(--bg-champagne);
+            color: var(--text-espresso);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-save-modal {
+            flex: 1.2;
+            padding: 11px;
+            border-radius: 999px;
+            border: none;
+            background: var(--text-espresso);
+            color: var(--white);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn-copy-link-modal {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #B51B34 0%, var(--burgundy) 100%);
+            color: var(--white);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            box-shadow: 0 8px 20px rgba(155, 19, 40, 0.26);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: transform 0.14s ease;
+        }
+
+        .btn-copy-link-modal:active {
+            transform: scale(0.97);
+        }
+
+        .helper-hint {
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--text-taupe);
+            background: var(--bg-champagne);
+            padding: 8px 11px;
+            border-radius: 12px;
+            border: 1px solid rgba(155, 19, 40, 0.08);
+        }
+
+        /* Toast Xabarnoma */
+        .toast-banner {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--text-espresso);
+            color: var(--white);
+            padding: 11px 18px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 80;
+            max-width: 92vw;
+            text-align: center;
+        }
+
+        .toast-banner.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-shell" class="app-shell">
+    <!-- Uchqun va yurakchalar Canvas qatlami -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- Fon mayda yurakchalar -->
+    <div class="bg-hearts" aria-hidden="true">
+        <span class="bg-heart-dot" style="top: 11%; left: 10%;">♥</span>
+        <span class="bg-heart-dot" style="top: 16%; right: 12%; animation-delay: 1.5s;">♥</span>
+        <span class="bg-heart-dot" style="top: 48%; left: 7%; animation-delay: 2.8s;">♥</span>
+        <span class="bg-heart-dot" style="bottom: 18%; right: 10%; animation-delay: 0.9s;">♥</span>
+        <span class="bg-heart-dot" style="bottom: 12%; left: 15%; animation-delay: 3.4s;">♥</span>
+    </div>
+
+    <!-- Yuqori o'ng burchakdagi kichik tugmalar -->
+    <div class="top-controls">
+        <button id="sound-toggle-btn" type="button" class="icon-circle-btn" title="Ovozni yoqish/o'chirish" aria-label="Ovoz">
+            <svg id="sound-on-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <svg id="sound-off-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+        </button>
+
+        <button id="open-settings-btn" type="button" class="icon-circle-btn" title="Sozlamalar" aria-label="Sozlamalar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- =====================================================
+         1-BOSQICH: Siniq Yurakni Birlashtirish (Faqat surish!)
+         ===================================================== -->
+    <section id="step-1" class="step-screen active">
+        <div class="pill-badge-row">
+            <span class="pill-line"></span>
+            <span class="pill-badge">FAQAT BIZ UCHUN</span>
+            <span class="pill-line"></span>
+        </div>
+
+        <div class="step1-center">
+            <div class="subtitle-italic">Bu alohida taklif</div>
+            <h1 id="s1-recipient" class="hero-name">Shaxzoda</h1>
+
+            <div class="heart-stage">
+                <div id="heart-glow" class="heart-glow"></div>
+                <svg width="116" height="102" viewBox="0 0 120 105" fill="none" aria-hidden="true">
+                    <g id="heart-left" style="transform: translate(-12px, 3px) rotate(-7deg); transform-origin: 60px 60px;">
+                        <path d="M60 96 C60 96 14 67 14 35 C14 19 26 9 40 9 C49 9 56 14 60 21 L55 34 L63 46 L54 60 L62 74 L60 96 Z" fill="#9B1328"/>
+                    </g>
+                    <g id="heart-right" style="transform: translate(12px, -3px) rotate(7deg); transform-origin: 60px 60px;">
+                        <path d="M60 96 L62 74 L54 60 L63 46 L55 34 L60 21 C64 14 71 9 80 9 C94 9 106 19 106 35 C106 67 60 96 60 96 Z" fill="#9B1328"/>
+                    </g>
+                </svg>
+                <span id="heart-sparkle" class="heart-sparkle">✦</span>
+            </div>
+
+            <p class="step1-desc">
+                Yurakning ikki bo'lagini birlashtiring — kichkina savolim sizni kutyapti.
+            </p>
+
+            <div id="slider-track" class="slider-track">
+                <div id="slider-fill" class="slider-fill"></div>
+                <div id="slider-thumb" class="slider-thumb">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+                <span id="slider-label" class="slider-label">OCHISH UCHUN SURING <span class="slider-hint-arrow">→</span></span>
+            </div>
+
+            <div class="sender-caption">KIMDAN: <span id="s1-sender">JAVOHIR</span></div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         2-BOSQICH: Bitta Kichkina Savol (HA / Xavfsiz zonadagi Yo'q)
+         ===================================================== -->
+    <section id="step-2" class="step-screen">
+        <div class="step2-header">
+            <span class="pill-badge">BITTA KICHKINA SAVOL</span>
+            <span id="dodge-counter" class="counter-pill">+000</span>
+        </div>
+
+        <div id="question-card" class="question-card">
+            <p class="question-sub">
+                Sizga kichkina taklifim bor — balki u bizning eng yoqimli xotiralarimizdan biriga aylanar.
+            </p>
+            <h2 class="question-title"><span id="s2-recipient">Shaxzoda</span>, uchrashamizmi?</h2>
+
+            <div id="choice-arena" class="choice-arena">
+                <button id="btn-yes" type="button" class="btn-yes">♥ HA</button>
+                <button id="btn-no" type="button" class="btn-no">Yo'q</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         3-BOSQICH: Rozilik Qabul Qilindi (To'q Bordo Bayram #4A0A14)
+         ===================================================== -->
+    <section id="step-3" class="step-screen">
+        <div class="bokeh-layer" aria-hidden="true">
+            <span class="bokeh-dot" style="width: 44px; height: 44px; top: 18%; left: 16%;"></span>
+            <span class="bokeh-dot" style="width: 68px; height: 68px; top: 26%; right: 12%; animation-delay: 1.2s;"></span>
+            <span class="bokeh-dot" style="width: 38px; height: 38px; bottom: 26%; left: 22%; animation-delay: 2.1s;"></span>
+            <span class="bokeh-dot" style="width: 56px; height: 56px; bottom: 18%; right: 18%; animation-delay: 0.7s;"></span>
+        </div>
+
+        <div class="celebration-center">
+            <div class="heart-emblem-circle">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="#FFFFFF">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+            </div>
+
+            <div class="celebration-kicker">ROZILIK QABUL QILINDI</div>
+            <h2 class="celebration-title">Ajoyib,<br><em>uchrashamiz!</em></h2>
+            <p class="celebration-desc">
+                Endi kunni tanlab, bizning yoqimli oqshomimizni birga rejalashtiramiz.
+            </p>
+
+            <button id="go-step4-btn" type="button" class="btn-cream">
+                REJANI TANLAYMIZ 📅
+            </button>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         4-BOSQICH: 1/2 — Kun va Vaqtni Tanlang
+         ===================================================== -->
+    <section id="step-4" class="step-screen">
+        <div class="wizard-top">
+            <span class="wizard-kicker">KELISHUVNI CHIROYLI QILAMIZ</span>
+            <div class="wizard-dots">
+                <span class="dot-bar active"></span>
+                <span class="dot-bar"></span>
+                <span>1/2</span>
+            </div>
+        </div>
+
+        <h2 class="wizard-title">Kun va vaqtni tanlang</h2>
+        <div class="section-label" style="margin-top: 0;">QACHON UCHRASHAMIZ?</div>
+
+        <div id="dates-list-container" class="date-list"></div>
+
+        <div class="divider-or">YOKI</div>
+
+        <button id="toggle-custom-date-btn" type="button" class="date-card">
+            <div class="date-card-left">
+                <div class="date-icon-box">🗓️</div>
+                <div>
+                    <div class="date-card-title">O'zimga qulay vaqtni tanlayman</div>
+                    <div id="custom-date-preview" class="date-card-time">Boshqa kun yoki soat kiritish</div>
+                </div>
+            </div>
+            <div id="custom-date-radio" class="radio-circle"></div>
+        </button>
+
+        <div id="custom-date-box" class="custom-date-box">
+            <input id="custom-date-input" type="text" class="field-input" placeholder="Masalan: 25-Noyabr, Chorshanba">
+            <input id="custom-time-input" type="time" class="field-input" value="19:00">
+        </div>
+
+        <button id="go-step5-btn" type="button" class="btn-primary" style="margin-top: 18px;">
+            KEYINGI — REJANI TANLASH →
+        </button>
+    </section>
+
+    <!-- =====================================================
+         5-BOSQICH: 2/2 — Reja va Tilakni Tanlang
+         ===================================================== -->
+    <section id="step-5" class="step-screen">
+        <div class="wizard-top">
+            <button id="back-step4-btn" type="button" class="back-link-btn">← Vaqtga qaytish</button>
+            <div class="wizard-dots">
+                <span class="dot-bar active"></span>
+                <span class="dot-bar active"></span>
+                <span>2/2</span>
+            </div>
+        </div>
+
+        <h2 class="wizard-title">Reja va tilakni tanlang</h2>
+
+        <div class="summary-pill">
+            <div class="date-icon-box">📅</div>
+            <div>
+                <div id="s5-date-display" class="date-card-title">22-Noyabr, Yakshanba</div>
+                <div id="s5-time-display" class="date-card-time">🕒 17:30</div>
+            </div>
+        </div>
+
+        <div class="section-label">NIMA QILAMIZ?</div>
+        <div id="plans-chips-container" class="chips-grid"></div>
+
+        <div class="section-label">SIZDAN BIR-IKKI OG'IZ — IXTIYORIY</div>
+        <textarea id="note-textarea" maxlength="120" class="note-textarea" placeholder="Qisqa javob yoki tilak yozishingiz mumkin..."></textarea>
+        <div id="note-counter" class="char-count">0/120</div>
+
+        <button id="go-step6-btn" type="button" class="btn-primary" style="margin-top: 14px;">
+            REJANI TASDIQLASH ♥
+        </button>
+    </section>
+
+    <!-- =====================================================
+         6-BOSQICH: Rejamiz Tayyor — Yakuniy Xat
+         ===================================================== -->
+    <section id="step-6" class="step-screen">
+        <div class="pill-badge-row" style="margin-bottom: 10px;">
+            <span class="pill-line"></span>
+            <span class="pill-badge">REJAMIZ TAYYOR</span>
+            <span class="pill-line"></span>
+        </div>
+
+        <h2 class="wizard-title" style="text-align: center; margin-bottom: 16px;">Biz uchun kichkina xat</h2>
+
+        <div class="letter-card">
+            <div class="letter-corner-heart">♥</div>
+            <div class="letter-greeting">Aziz <span id="s6-recipient">Shaxzoda</span>,</div>
+            <p class="letter-body">
+                Endi hammasi aniq: uchrashuvimiz belgilandi. Bu rejani asrab qo'yaman. O'sha kunni intiqib kutaman.
+            </p>
+
+            <div class="letter-details-box">
+                <div class="detail-row">
+                    <span>📅</span>
+                    <span id="s6-date">22-Noyabr, Yakshanba</span>
+                </div>
+                <div class="detail-row">
+                    <span>🕒</span>
+                    <span id="s6-time">17:30</span>
+                </div>
+                <div class="detail-row">
+                    <span>✨</span>
+                    <span id="s6-plan">Qahvaxonada suhbat ☕</span>
+                </div>
+                <div id="s6-note-row" class="detail-row" style="display: none; font-style: italic; font-weight: 500; color: var(--text-taupe); border-top: 1px solid rgba(35,24,21,0.07); padding-top: 8px;">
+                    <span>💌</span>
+                    <span id="s6-note"></span>
+                </div>
+            </div>
+
+            <p class="letter-body" style="margin-bottom: 10px;">
+                Bu oqshom biz uchun ajoyib xotiraga aylanishiga ishonaman.
+            </p>
+            <div class="letter-sign">— <span id="s6-sender">Javohir</span> ♥</div>
+        </div>
+
+        <button id="share-btn" type="button" class="btn-primary">
+            YAXSHI XABARNI ULASHISH
+        </button>
+
+        <div class="footer-credit">ILIQLIK BILAN YARATILDI • DREAMDAY</div>
+    </section>
+</div>
+
+<!-- =====================================================
+     SOZLAMALAR MODAL OYNASI + SHAXSIY HAVOLA GENERATORI
+     ===================================================== -->
+<div id="settings-modal" class="modal-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <h3 class="font-serif" style="font-size: 20px; font-weight: 600; color: var(--text-espresso);">Taklifnomani moslash</h3>
+                <p style="font-size: 11px; color: var(--text-taupe);">Tahrirlang va shaxsiy havolani nusxalab yuboring</p>
+            </div>
+            <button id="close-settings-btn" type="button" class="icon-circle-btn" style="width: 32px; height: 32px;">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Ismlar -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                    <label class="modal-label" style="display: block; margin-bottom: 5px;">Taklif oluvchi</label>
+                    <input id="set-recipient" type="text" class="field-input" placeholder="Masalan: Shaxzoda">
+                </div>
+                <div>
+                    <label class="modal-label" style="display: block; margin-bottom: 5px;">Taklif beruvchi</label>
+                    <input id="set-sender" type="text" class="field-input" placeholder="Masalan: Javohir">
+                </div>
+            </div>
+
+            <!-- Bir nechta Kun va Vaqtlar -->
+            <div>
+                <div class="modal-group-header">
+                    <span class="modal-label">Kunlar va vaqtlar</span>
+                    <button id="add-date-row-btn" type="button" class="add-item-btn">+ Kun qo'shish</button>
+                </div>
+                <div id="modal-dates-rows" class="dynamic-rows"></div>
+            </div>
+
+            <!-- Bir nechta Nima qilamiz? rejalari -->
+            <div>
+                <div class="modal-group-header">
+                    <span class="modal-label">Nima qilamiz? (Rejalar)</span>
+                    <button id="add-plan-row-btn" type="button" class="add-item-btn">+ Reja qo'shish</button>
+                </div>
+                <div id="modal-plans-rows" class="dynamic-rows"></div>
+            </div>
+
+            <div class="helper-hint">
+                💡 <strong>Qanday yuboriladi?</strong> Yuqoridagi ma'lumotlarni yozib, pastdagi <strong>"🔗 Shaxsiy havolani nusxalash"</strong> tugmasini bosing — aynan shu ismlar va kunlar yozilgan alohida havola nusxalanadi!
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button id="copy-personal-link-btn" type="button" class="btn-copy-link-modal">
+                🔗 Shaxsiy havolani nusxalash
+            </button>
+            <div class="modal-footer-row">
+                <button id="reset-all-btn" type="button" class="btn-secondary-modal">Boshiga qaytish ↺</button>
+                <button id="save-settings-btn" type="button" class="btn-save-modal">Saqlash ♥</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-banner" class="toast-banner"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    const DEFAULT_DATES = [
+        { day: '18-Noyabr', weekday: 'Chorshanba', time: '18:30' },
+        { day: '20-Noyabr', weekday: 'Juma', time: '19:00' },
+        { day: '22-Noyabr', weekday: 'Yakshanba', time: '17:30' }
+    ];
+
+    const DEFAULT_PLANS = [
+        'Qahvaxonada suhbat ☕',
+        'Muzqaymoq va sayr 🍦',
+        'Kino va kechki ovqat 🎬',
+        'Bog\'da kechki sayr 🌙'
+    ];
+
+    const DODGE_PHRASES = [
+        "Aniqmi?",
+        "Juda iltimos qilsam-chi?",
+        "Yana bir bor o'ylab ko'rasizmi?",
+        "Yuragimni sindirmang...",
+        "Baribir 'Ha' deysiz-ku 😉"
+    ];
+
+    const state = {
+        recipient: 'Shaxzoda',
+        sender: 'Javohir',
+        dates: JSON.parse(JSON.stringify(DEFAULT_DATES)),
+        plans: DEFAULT_PLANS.slice(),
+        selectedDateIndex: 2,
+        isCustomDate: false,
+        customDateText: '',
+        customTimeText: '19:00',
+        selectedPlanIndex: 0,
+        note: '',
+        dodgeCount: 0,
+        currentStep: 1
+    };
+
+    // =====================================================
+    // 1. UTF-8 XAVFSIZ URL ENCODE / DECODE (?c=...)
+    // =====================================================
+    function encodePayloadToBase64(obj) {
+        try {
+            const jsonStr = JSON.stringify(obj);
+            const bytes = new TextEncoder().encode(jsonStr);
+            let binStr = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binStr += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binStr)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function decodeBase64ToPayload(b64Url) {
+        try {
+            let b64 = b64Url.replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4 !== 0) b64 += '=';
+            const binStr = atob(b64);
+            const bytes = new Uint8Array(binStr.length);
+            for (let i = 0; i < binStr.length; i++) {
+                bytes[i] = binStr.charCodeAt(i);
+            }
+            const jsonStr = new TextDecoder().decode(bytes);
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function normalizeDateItem(d) {
+        if (!d) return { day: '22-Noyabr', weekday: 'Yakshanba', time: '19:00' };
+        if (d.day !== undefined || d.weekday !== undefined) {
+            return {
+                day: String(d.day || '').trim(),
+                weekday: String(d.weekday || '').trim(),
+                time: String(d.time || '19:00').trim()
+            };
+        }
+        // Eski format { date: "22-Noyabr, Yakshanba", time: "19:00" } ni qo'llab-quvvatlash
+        const parts = String(d.date || '22-Noyabr, Yakshanba').split(',');
+        return {
+            day: (parts[0] || '').trim(),
+            weekday: (parts.slice(1).join(',') || '').trim(),
+            time: String(d.time || '19:00').trim()
+        };
+    }
+
+    function formatDateLabel(d) {
+        const norm = normalizeDateItem(d);
+        return norm.weekday ? (norm.day + ', ' + norm.weekday) : norm.day;
+    }
+
+    function buildShareableLink() {
+        const payload = {
+            to: state.recipient,
+            from: state.sender,
+            dates: state.dates.map(normalizeDateItem),
+            plans: state.plans.slice()
+        };
+        const encoded = encodePayloadToBase64(payload);
+        try {
+            const urlObj = new URL(window.location.href.split('?')[0].split('#')[0]);
+            if (encoded) urlObj.searchParams.set('c', encoded);
+            return urlObj.toString();
+        } catch (e) {
+            return window.location.href.split('?')[0] + (encoded ? '?c=' + encoded : '');
+        }
+    }
+
+    function loadFromUrlParams() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const lockParam = params.get('lock');
+            if (lockParam === '1') {
+                const gearBtn = document.getElementById('open-settings-btn');
+                if (gearBtn) gearBtn.style.display = 'none';
+            }
+
+            const cParam = params.get('c');
+            if (cParam) {
+                const decoded = decodeBase64ToPayload(cParam);
+                if (decoded && typeof decoded === 'object') {
+                    if (decoded.to) state.recipient = String(decoded.to);
+                    if (decoded.from) state.sender = String(decoded.from);
+                    if (Array.isArray(decoded.dates) && decoded.dates.length > 0) {
+                        state.dates = decoded.dates.map(normalizeDateItem);
+                        state.selectedDateIndex = 0;
+                    }
+                    if (Array.isArray(decoded.plans) && decoded.plans.length > 0) {
+                        state.plans = decoded.plans.map(String);
+                        state.selectedPlanIndex = 0;
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+
+    // =====================================================
+    // 2. CANVAS UCHQUN VA YURAKCHA ANIMATSIYALARI
+    // =====================================================
+    const fx = {
+        canvas: document.getElementById('fx-canvas'),
+        ctx: null,
+        particles: [],
+        running: false,
+        init: function () {
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        },
+        resize: function () {
+            const shell = document.getElementById('app-shell');
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.canvas.width = shell.clientWidth * dpr;
+            this.canvas.height = shell.clientHeight * dpr;
+            if (this.ctx) this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        },
+        burst: function (normX, normY, count, palette) {
+            const shell = document.getElementById('app-shell');
+            const cx = shell.clientWidth * normX;
+            const cy = shell.clientHeight * normY;
+            const colors = palette || ['#9B1328', '#D94E6B', '#F5C26B', '#FFF5E8'];
+            for (let i = 0; i < (count || 28); i++) {
+                const ang = Math.random() * Math.PI * 2;
+                const spd = 70 + Math.random() * 190;
+                this.particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd - 45,
+                    size: 4 + Math.random() * 5,
+                    color: colors[i % colors.length],
+                    isHeart: i % 2 === 0,
+                    rot: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 6,
+                    life: 0.75 + Math.random() * 0.55,
+                    maxLife: 1.3
+                });
+            }
+            if (!this.running) this.loop();
+        },
+        drawHeartShape: function (ctx, s) {
+            ctx.beginPath();
+            ctx.moveTo(0, s * 0.35);
+            ctx.bezierCurveTo(-s * 0.6, -s * 0.25, -s * 1.1, s * 0.45, 0, s * 1.15);
+            ctx.bezierCurveTo(s * 1.1, s * 0.45, s * 0.6, -s * 0.25, 0, s * 0.35);
+            ctx.fill();
+        },
+        loop: function () {
+            this.running = true;
+            let last = performance.now();
+            const step = (now) => {
+                const dt = Math.min((now - last) / 1000, 0.05);
+                last = now;
+                const shell = document.getElementById('app-shell');
+                this.ctx.clearRect(0, 0, shell.clientWidth, shell.clientHeight);
+
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.life -= dt;
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 180 * dt;
+                    p.vx *= 0.97;
+                    p.rot += p.vRot * dt;
+
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate(p.rot);
+                    this.ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+                    this.ctx.fillStyle = p.color;
+                    if (p.isHeart) {
+                        this.drawHeartShape(this.ctx, p.size);
+                    } else {
+                        this.ctx.beginPath();
+                        this.ctx.arc(0, 0, p.size * 0.55, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                    this.ctx.restore();
+                }
+
+                if (this.particles.length > 0) {
+                    requestAnimationFrame(step);
+                } else {
+                    this.running = false;
+                }
+            };
+            requestAnimationFrame(step);
+        }
+    };
+    fx.init();
+
+    // =====================================================
+    // 3. WEB AUDIO OVOZ EFFEKTLARI
+    // =====================================================
+    const soundFX = {
+        ctx: null,
+        muted: false,
+        ensureCtx: function () {
+            if (this.muted) return null;
+            try {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) this.ctx = new AC();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(function () {});
+                }
+                return this.ctx;
+            } catch (e) {
+                return null;
+            }
+        },
+        playTone: function (freq, dur, vol, type, slideTo) {
+            const c = this.ensureCtx();
+            if (!c) return;
+            try {
+                const osc = c.createOscillator();
+                const gain = c.createGain();
+                osc.type = type || 'sine';
+                osc.frequency.setValueAtTime(freq, c.currentTime);
+                if (slideTo) {
+                    osc.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + dur);
+                }
+                gain.gain.setValueAtTime(vol || 0.06, c.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0008, c.currentTime + dur);
+                osc.connect(gain);
+                gain.connect(c.destination);
+                osc.start();
+                osc.stop(c.currentTime + dur);
+            } catch (e) {}
+        },
+        tick: function (progress) {
+            this.playTone(440 + progress * 440, 0.045, 0.035, 'sine');
+        },
+        harpUnite: function () {
+            [523.25, 659.25, 783.99, 987.77, 1318.51].forEach((f, idx) => {
+                setTimeout(() => this.playTone(f, 0.38, 0.065, 'triangle'), idx * 55);
+            });
+        },
+        dodgeBoing: function () {
+            this.playTone(320, 0.14, 0.06, 'sine', 560);
+        },
+        celebrateMelody: function () {
+            [
+                { f: 523.25, t: 0, d: 0.22 },
+                { f: 659.25, t: 95, d: 0.22 },
+                { f: 783.99, t: 190, d: 0.25 },
+                { f: 1046.50, t: 290, d: 0.45 },
+                { f: 987.77, t: 430, d: 0.22 },
+                { f: 1046.50, t: 540, d: 0.55 }
+            ].forEach((m) => {
+                setTimeout(() => this.playTone(m.f, m.d, 0.075, 'triangle'), m.t);
+            });
+        },
+        chime: function () {
+            this.playTone(660, 0.11, 0.055, 'sine', 880);
+        }
+    };
+
+    function showToast(msg) {
+        const el = document.getElementById('toast-banner');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._timer);
+        el._timer = setTimeout(function () {
+            el.classList.remove('show');
+        }, 2800);
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // =====================================================
+    // 4. UI SINXRONIZATSIYA VA BOSQICHGA O'TISH
+    // =====================================================
+    function syncAllTexts() {
+        document.getElementById('s1-recipient').textContent = state.recipient;
+        document.getElementById('s1-sender').textContent = state.sender.toUpperCase();
+        document.getElementById('s2-recipient').textContent = state.recipient;
+        document.getElementById('s6-recipient').textContent = state.recipient;
+        document.getElementById('s6-sender').textContent = state.sender;
+    }
+
+    function getActiveDateObj() {
+        if (state.isCustomDate && state.customDateText.trim()) {
+            return {
+                label: state.customDateText.trim(),
+                time: state.customTimeText || '19:00'
+            };
+        }
+        const chosen = state.dates[state.selectedDateIndex] || state.dates[0] || DEFAULT_DATES[0];
+        return {
+            label: formatDateLabel(chosen),
+            time: chosen.time || '19:00'
+        };
+    }
+
+    function getActivePlan() {
+        return state.plans[state.selectedPlanIndex] || state.plans[0] || DEFAULT_PLANS[0];
+    }
+
+    function goToStep(stepNum) {
+        state.currentStep = stepNum;
+        const shell = document.getElementById('app-shell');
+        shell.classList.toggle('celebration-mode', stepNum === 3);
+
+        document.querySelectorAll('.step-screen').forEach(function (sec) {
+            sec.classList.remove('active');
+        });
+        const target = document.getElementById('step-' + stepNum);
+        if (target) target.classList.add('active');
+
+        if (stepNum === 4) renderDatesStep();
+        if (stepNum === 5) renderPlanStep();
+        if (stepNum === 6) renderFinalLetter();
+    }
+
+    // =====================================================
+    // 5. 1-BOSQICH: FAQAT SURGANDA OCHILADIGAN SLAYDER (88%+)
+    // =====================================================
+    function initSlider() {
+        const track = document.getElementById('slider-track');
+        const thumb = document.getElementById('slider-thumb');
+        const fill = document.getElementById('slider-fill');
+        const label = document.getElementById('slider-label');
+        const heartLeft = document.getElementById('heart-left');
+        const heartRight = document.getElementById('heart-right');
+        const heartGlow = document.getElementById('heart-glow');
+        const sparkle = document.getElementById('heart-sparkle');
+
+        let dragging = false;
+        let pointerStartX = 0;
+        let thumbStartOffset = 0;
+        let currentProgress = 0;
+        let unlocked = false;
+        let lastTickBucket = -1;
+
+        function getMaxTravel() {
+            return Math.max(20, track.clientWidth - thumb.offsetWidth - 12);
+        }
+
+        function setProgress(p, withSpring) {
+            currentProgress = Math.max(0, Math.min(1, p));
+            const offset = currentProgress * getMaxTravel();
+
+            const transitionStyle = withSpring ? 'transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none';
+            const fillTransition = withSpring ? 'width 0.34s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none';
+
+            thumb.style.transition = transitionStyle;
+            fill.style.transition = fillTransition;
+            heartLeft.style.transition = transitionStyle;
+            heartRight.style.transition = transitionStyle;
+
+            thumb.style.transform = 'translateX(' + offset + 'px)';
+            fill.style.width = (offset + thumb.offsetWidth + 6) + 'px';
+            label.style.opacity = Math.max(0, 1 - currentProgress * 1.45);
+
+            const inv = 1 - currentProgress;
+            heartLeft.style.transform = 'translate(' + (-12 * inv) + 'px, ' + (3 * inv) + 'px) rotate(' + (-7 * inv) + 'deg)';
+            heartRight.style.transform = 'translate(' + (12 * inv) + 'px, ' + (-3 * inv) + 'px) rotate(' + (7 * inv) + 'deg)';
+            heartGlow.style.transform = 'scale(' + (1 + currentProgress * 0.5) + ')';
+
+            const bucket = Math.floor(currentProgress * 6);
+            if (dragging && bucket !== lastTickBucket && bucket > 0) {
+                lastTickBucket = bucket;
+                soundFX.tick(currentProgress);
+            }
+
+            if (currentProgress >= 0.88) {
+                sparkle.style.opacity = '1';
+                sparkle.style.transform = 'scale(1.2)';
+            } else {
+                sparkle.style.opacity = '0';
+                sparkle.style.transform = 'scale(0.3)';
+            }
+        }
+
+        function completeUnlock() {
+            if (unlocked) return;
+            unlocked = true;
+            dragging = false;
+            setProgress(1, true);
+            soundFX.harpUnite();
+            fx.burst(0.5, 0.42, 34, ['#9B1328', '#D94E6B', '#F5C26B', '#FFFFFF']);
+
+            setTimeout(function () {
+                goToStep(2);
+                setTimeout(function () {
+                    unlocked = false;
+                    lastTickBucket = -1;
+                    setProgress(0, false);
+                }, 420);
+            }, 460);
+        }
+
+        function beginDrag(clientX) {
+            if (unlocked) return;
+            dragging = true;
+            pointerStartX = clientX;
+            thumbStartOffset = currentProgress * getMaxTravel();
+        }
+
+        function moveDrag(clientX) {
+            if (!dragging || unlocked) return;
+            const maxTravel = getMaxTravel();
+            const newOffset = thumbStartOffset + (clientX - pointerStartX);
+            const prog = newOffset / maxTravel;
+            setProgress(prog, false);
+
+            if (currentProgress >= 0.88) {
+                completeUnlock();
+            }
+        }
+
+        function endDrag() {
+            if (!dragging) return;
+            dragging = false;
+            lastTickBucket = -1;
+            if (currentProgress >= 0.88) {
+                completeUnlock();
+            } else {
+                setProgress(0, true);
+            }
+        }
+
+        thumb.addEventListener('touchstart', function (e) {
+            if (e.touches.length > 0) {
+                if (e.cancelable) e.preventDefault();
+                beginDrag(e.touches[0].clientX);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', function (e) {
+            if (dragging && e.touches.length > 0) {
+                if (e.cancelable) e.preventDefault();
+                moveDrag(e.touches[0].clientX);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', endDrag);
+        window.addEventListener('touchcancel', endDrag);
+
+        thumb.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            beginDrag(e.clientX);
+        });
+        window.addEventListener('mousemove', function (e) {
+            if (dragging) moveDrag(e.clientX);
+        });
+        window.addEventListener('mouseup', endDrag);
+
+        setProgress(0, false);
+    }
+
+    // =====================================================
+    // 6. 2-BOSQICH: XAVFSIZ ZONALARDA QOCHUVCHI YO'Q TUGMASI
+    // =====================================================
+    function initStep2() {
+        const btnYes = document.getElementById('btn-yes');
+        const btnNo = document.getElementById('btn-no');
+        const arena = document.getElementById('choice-arena');
+        const counterEl = document.getElementById('dodge-counter');
+
+        const SAFE_SPOTS = [
+            { xPct: 0.22, yPct: 0.13 },
+            { xPct: 0.78, yPct: 0.13 },
+            { xPct: 0.22, yPct: 0.87 },
+            { xPct: 0.78, yPct: 0.87 }
+        ];
+        let lastSpotIdx = -1;
+
+        function dodgeNoButton(e) {
+            if (e && e.cancelable) e.preventDefault();
+            soundFX.dodgeBoing();
+
+            state.dodgeCount += 1;
+            counterEl.textContent = '+' + String(state.dodgeCount * 10).padStart(3, '0');
+            counterEl.style.transform = 'scale(1.22)';
+            setTimeout(function () { counterEl.style.transform = 'scale(1)'; }, 180);
+
+            const phrase = DODGE_PHRASES[(state.dodgeCount - 1) % DODGE_PHRASES.length];
+            btnNo.textContent = phrase;
+
+            const scale = Math.min(1.42, 1 + state.dodgeCount * 0.08);
+            btnYes.style.transform = 'scale(' + scale + ')';
+
+            let nextIdx = Math.floor(Math.random() * SAFE_SPOTS.length);
+            if (nextIdx === lastSpotIdx) {
+                nextIdx = (nextIdx + 1) % SAFE_SPOTS.length;
+            }
+            lastSpotIdx = nextIdx;
+            const spot = SAFE_SPOTS[nextIdx];
+
+            const arenaW = arena.clientWidth;
+            const arenaH = arena.clientHeight;
+            const btnW = btnNo.offsetWidth || 120;
+            const btnH = btnNo.offsetHeight || 40;
+
+            const rawX = arenaW * spot.xPct - btnW / 2;
+            const rawY = arenaH * spot.yPct - btnH / 2;
+
+            const clampedX = Math.max(6, Math.min(arenaW - btnW - 6, rawX));
+            const clampedY = Math.max(6, Math.min(arenaH - btnH - 6, rawY));
+
+            btnNo.style.bottom = 'auto';
+            btnNo.style.transform = 'none';
+            btnNo.style.left = clampedX + 'px';
+            btnNo.style.top = clampedY + 'px';
+        }
+
+        btnNo.addEventListener('touchstart', dodgeNoButton, { passive: false });
+        btnNo.addEventListener('click', dodgeNoButton);
+
+        btnYes.addEventListener('click', function () {
+            soundFX.celebrateMelody();
+            fx.burst(0.5, 0.5, 45, ['#FFF5E8', '#F5C26B', '#FF8FA3', '#FFFFFF']);
+            goToStep(3);
+        });
+    }
+
+    // =====================================================
+    // 7. 4-BOSQICH: KUN VA VAQTNI TANLASH
+    // =====================================================
+    function renderDatesStep() {
+        const listEl = document.getElementById('dates-list-container');
+        const customBtn = document.getElementById('toggle-custom-date-btn');
+        const customRadio = document.getElementById('custom-date-radio');
+        const customBox = document.getElementById('custom-date-box');
+
+        listEl.innerHTML = '';
+
+        state.dates.forEach(function (item, idx) {
+            const isSelected = !state.isCustomDate && state.selectedDateIndex === idx;
+            const label = formatDateLabel(item);
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'date-card' + (isSelected ? ' selected' : '');
+            card.innerHTML =
+                '<div class="date-card-left">' +
+                    '<div class="date-icon-box">📅</div>' +
+                    '<div>' +
+                        '<div class="date-card-title">' + escapeHtml(label) + '</div>' +
+                        '<div class="date-card-time">🕒 ' + escapeHtml(item.time) + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="radio-circle">' + (isSelected ? '✓' : '') + '</div>';
+
+            card.addEventListener('click', function () {
+                soundFX.chime();
+                state.isCustomDate = false;
+                state.selectedDateIndex = idx;
+                renderDatesStep();
+            });
+            listEl.appendChild(card);
+        });
+
+        customBtn.classList.toggle('selected', state.isCustomDate);
+        customRadio.textContent = state.isCustomDate ? '✓' : '';
+        customBox.classList.toggle('open', state.isCustomDate);
+    }
+
+    // =====================================================
+    // 8. 5-BOSQICH: REJA ("NIMA QILAMIZ?") VA TILAKNI TANLASH
+    // =====================================================
+    function renderPlanStep() {
+        const activeDate = getActiveDateObj();
+        document.getElementById('s5-date-display').textContent = activeDate.label;
+        document.getElementById('s5-time-display').textContent = '🕒 ' + activeDate.time;
+
+        const plansEl = document.getElementById('plans-chips-container');
+        plansEl.innerHTML = '';
+        state.plans.forEach(function (planText, idx) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chip-btn' + (state.selectedPlanIndex === idx ? ' selected' : '');
+            btn.textContent = planText;
+            btn.addEventListener('click', function () {
+                soundFX.chime();
+                state.selectedPlanIndex = idx;
+                renderPlanStep();
+            });
+            plansEl.appendChild(btn);
+        });
+    }
+
+    // =====================================================
+    // 9. 6-BOSQICH: YAKUNIY XAT VA ULASHISH
+    // =====================================================
+    function renderFinalLetter() {
+        const activeDate = getActiveDateObj();
+        const activePlan = getActivePlan();
+
+        document.getElementById('s6-date').textContent = activeDate.label;
+        document.getElementById('s6-time').textContent = activeDate.time;
+        document.getElementById('s6-plan').textContent = activePlan;
+
+        const noteRow = document.getElementById('s6-note-row');
+        const noteSpan = document.getElementById('s6-note');
+        if (state.note.trim()) {
+            noteSpan.textContent = '“' + state.note.trim() + '”';
+            noteRow.style.display = 'flex';
+        } else {
+            noteRow.style.display = 'none';
+        }
+    }
+
+    function copyTextToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(text).catch(function () {});
+        }
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '0';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            ta.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        } catch (e) {}
+    }
+
+    // =====================================================
+    // 10. SOZLAMALAR MODAL OYNASI + SHAXSIY HAVOLA (?c=...)
+    // =====================================================
+    function initSettingsModal() {
+        const modal = document.getElementById('settings-modal');
+        const recInput = document.getElementById('set-recipient');
+        const sendInput = document.getElementById('set-sender');
+        const datesRowsEl = document.getElementById('modal-dates-rows');
+        const plansRowsEl = document.getElementById('modal-plans-rows');
+
+        let tempDates = [];
+        let tempPlans = [];
+
+        function renderModalRows() {
+            datesRowsEl.innerHTML = '';
+            tempDates.forEach(function (d, idx) {
+                const row = document.createElement('div');
+                row.className = 'dynamic-row';
+                row.innerHTML =
+                    '<input type="text" class="field-input m-date-day" value="' + escapeHtml(d.day) + '" placeholder="Sana (22-Noyabr)" style="flex: 1.05;">' +
+                    '<input type="text" class="field-input m-date-weekday" value="' + escapeHtml(d.weekday) + '" placeholder="Hafta kuni" style="flex: 1;">' +
+                    '<input type="time" class="field-input m-date-time" value="' + escapeHtml(d.time) + '" style="flex: 0.85;">' +
+                    (tempDates.length > 1 ? '<button type="button" class="remove-row-btn" title="O\'chirish">✕</button>' : '');
+
+                const delBtn = row.querySelector('.remove-row-btn');
+                if (delBtn) {
+                    delBtn.addEventListener('click', function () {
+                        syncTempFromInputs();
+                        tempDates.splice(idx, 1);
+                        renderModalRows();
+                    });
+                }
+                datesRowsEl.appendChild(row);
+            });
+
+            plansRowsEl.innerHTML = '';
+            tempPlans.forEach(function (planText, idx) {
+                const row = document.createElement('div');
+                row.className = 'dynamic-row';
+                row.innerHTML =
+                    '<input type="text" class="field-input m-plan-text" value="' + escapeHtml(planText) + '" placeholder="Masalan: Qahvaxonada suhbat ☕" style="flex: 1;">' +
+                    (tempPlans.length > 1 ? '<button type="button" class="remove-row-btn" title="O\'chirish">✕</button>' : '');
+
+                const delBtn = row.querySelector('.remove-row-btn');
+                if (delBtn) {
+                    delBtn.addEventListener('click', function () {
+                        syncTempFromInputs();
+                        tempPlans.splice(idx, 1);
+                        renderModalRows();
+                    });
+                }
+                plansRowsEl.appendChild(row);
+            });
+        }
+
+        function syncTempFromInputs() {
+            const dayEls = datesRowsEl.querySelectorAll('.m-date-day');
+            const weekEls = datesRowsEl.querySelectorAll('.m-date-weekday');
+            const timeEls = datesRowsEl.querySelectorAll('.m-date-time');
+            const updatedDates = [];
+            for (let i = 0; i < dayEls.length; i++) {
+                const dVal = dayEls[i].value.trim();
+                const wVal = weekEls[i].value.trim();
+                const tVal = timeEls[i].value || '19:00';
+                if (dVal || wVal) {
+                    updatedDates.push({
+                        day: dVal || '22-Noyabr',
+                        weekday: wVal,
+                        time: tVal
+                    });
+                }
+            }
+            if (updatedDates.length > 0) tempDates = updatedDates;
+
+            const pTextEls = plansRowsEl.querySelectorAll('.m-plan-text');
+            const updatedPlans = [];
+            for (let i = 0; i < pTextEls.length; i++) {
+                const txt = pTextEls[i].value.trim();
+                if (txt) updatedPlans.push(txt);
+            }
+            if (updatedPlans.length > 0) tempPlans = updatedPlans;
+        }
+
+        function applySettingsToState() {
+            syncTempFromInputs();
+            if (recInput.value.trim()) state.recipient = recInput.value.trim();
+            if (sendInput.value.trim()) state.sender = sendInput.value.trim();
+
+            if (tempDates.length > 0) {
+                state.dates = tempDates.map(normalizeDateItem);
+                state.selectedDateIndex = Math.min(state.selectedDateIndex, state.dates.length - 1);
+                state.isCustomDate = false;
+            }
+            if (tempPlans.length > 0) {
+                state.plans = tempPlans.slice();
+                state.selectedPlanIndex = Math.min(state.selectedPlanIndex, state.plans.length - 1);
+            }
+
+            syncAllTexts();
+            if (state.currentStep === 4) renderDatesStep();
+            if (state.currentStep === 5) renderPlanStep();
+            if (state.currentStep === 6) renderFinalLetter();
+        }
+
+        document.getElementById('open-settings-btn').addEventListener('click', function () {
+            soundFX.chime();
+            recInput.value = state.recipient;
+            sendInput.value = state.sender;
+            tempDates = state.dates.map(normalizeDateItem);
+            tempPlans = state.plans.slice();
+            renderModalRows();
+            modal.classList.add('open');
+        });
+
+        document.getElementById('close-settings-btn').addEventListener('click', function () {
+            modal.classList.remove('open');
+        });
+
+        document.getElementById('add-date-row-btn').addEventListener('click', function () {
+            syncTempFromInputs();
+            tempDates.push({ day: '25-Noyabr', weekday: 'Chorshanba', time: '19:00' });
+            renderModalRows();
+        });
+
+        document.getElementById('add-plan-row-btn').addEventListener('click', function () {
+            syncTempFromInputs();
+            tempPlans.push('Muzqaymoq va sayr 🍦');
+            renderModalRows();
+        });
+
+        // 1. "Saqlash ♥" tugmasi — ekranda darhol yangilaydi va URL'ni ham yangilaydi
+        document.getElementById('save-settings-btn').addEventListener('click', function () {
+            applySettingsToState();
+            const shareUrl = buildShareableLink();
+            try {
+                window.history.replaceState(null, '', shareUrl);
+            } catch (e) {}
+            modal.classList.remove('open');
+            soundFX.harpUnite();
+            showToast('O\'zgarishlar saqlandi ♥');
+        });
+
+        // 2. "🔗 Shaxsiy havolani nusxalash" tugmasi — ?c=... havolasini yaratib nusxalaydi
+        document.getElementById('copy-personal-link-btn').addEventListener('click', function () {
+            applySettingsToState();
+            const shareUrl = buildShareableLink();
+            try {
+                window.history.replaceState(null, '', shareUrl);
+            } catch (e) {}
+            copyTextToClipboard(shareUrl);
+            soundFX.harpUnite();
+            showToast('Havola nusxalandi! Endi Telegramdan yuborishingiz mumkin ♥');
+        });
+
+        document.getElementById('reset-all-btn').addEventListener('click', function () {
+            state.dodgeCount = 0;
+            document.getElementById('dodge-counter').textContent = '+000';
+            const btnYes = document.getElementById('btn-yes');
+            const btnNo = document.getElementById('btn-no');
+            btnYes.style.transform = 'scale(1)';
+            btnNo.style.left = '50%';
+            btnNo.style.top = 'auto';
+            btnNo.style.bottom = '14px';
+            btnNo.style.transform = 'translateX(-50%)';
+            btnNo.textContent = "Yo'q";
+            modal.classList.remove('open');
+            goToStep(1);
+        });
+    }
+
+    // =====================================================
+    // 11. HODISALARNI ULASH VA ISHGA TUSHIRISH
+    // =====================================================
+    loadFromUrlParams();
+    syncAllTexts();
+    initSlider();
+    initStep2();
+    initSettingsModal();
+
+    document.getElementById('sound-toggle-btn').addEventListener('click', function () {
+        soundFX.muted = !soundFX.muted;
+        document.getElementById('sound-on-icon').style.display = soundFX.muted ? 'none' : 'block';
+        document.getElementById('sound-off-icon').style.display = soundFX.muted ? 'block' : 'none';
+        if (!soundFX.muted) soundFX.chime();
+    });
+
+    document.getElementById('go-step4-btn').addEventListener('click', function () {
+        soundFX.chime();
+        goToStep(4);
+    });
+
+    document.getElementById('toggle-custom-date-btn').addEventListener('click', function () {
+        soundFX.chime();
+        state.isCustomDate = !state.isCustomDate;
+        renderDatesStep();
+    });
+
+    document.getElementById('custom-date-input').addEventListener('input', function (e) {
+        state.customDateText = e.target.value;
+    });
+
+    document.getElementById('custom-time-input').addEventListener('change', function (e) {
+        state.customTimeText = e.target.value || '19:00';
+    });
+
+    document.getElementById('go-step5-btn').addEventListener('click', function () {
+        soundFX.chime();
+        goToStep(5);
+    });
+
+    document.getElementById('back-step4-btn').addEventListener('click', function () {
+        soundFX.chime();
+        goToStep(4);
+    });
+
+    const noteTextarea = document.getElementById('note-textarea');
+    const noteCounter = document.getElementById('note-counter');
+    noteTextarea.addEventListener('input', function () {
+        state.note = noteTextarea.value;
+        noteCounter.textContent = state.note.length + '/120';
+    });
+
+    document.getElementById('go-step6-btn').addEventListener('click', function () {
+        soundFX.celebrateMelody();
+        fx.burst(0.5, 0.35, 36, ['#9B1328', '#D94E6B', '#F5C26B', '#FFFFFF']);
+        goToStep(6);
+    });
+
+    document.getElementById('share-btn').addEventListener('click', function () {
+        soundFX.harpUnite();
+        const activeDate = getActiveDateObj();
+        const activePlan = getActivePlan();
+        const shareUrl = buildShareableLink();
+
+        const text =
+            '💌 Aziz ' + state.recipient + ',\n' +
+            'Uchrashuvimiz belgilandi!\n\n' +
+            '📅 Kun: ' + activeDate.label + '\n' +
+            '🕒 Vaqt: ' + activeDate.time + '\n' +
+            '✨ Reja: ' + activePlan + '\n' +
+            (state.note.trim() ? '💬 Tilak: "' + state.note.trim() + '"\n' : '') +
+            '\n— ' + state.sender + ' ♥' +
+            (shareUrl && shareUrl.indexOf('http') === 0 ? '\n' + shareUrl : '');
+
+        copyTextToClipboard(text);
+        showToast('Xat nusxalandi! Endi yuborishingiz mumkin ♥');
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Uchrashuv — DreamDay',
+                text: text
+            }).catch(function () {});
+        }
+    });
+})();
+</script>
+</body>
+</html>
+```
